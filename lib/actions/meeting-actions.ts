@@ -89,6 +89,60 @@ export async function getAllMeetings() {
   );
 }
 
+export async function getMeetingsByDateRange(
+  startDate: string,
+  endDate: string
+) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session || session.user.role !== "admin") throw new Error("Unauthorized");
+
+  await connectDB();
+
+  const meetings = await Meeting.aggregate([
+    {
+      $match: {
+        scheduledAt: { $gte: new Date(startDate), $lte: new Date(endDate) },
+      },
+    },
+    { $sort: { scheduledAt: 1 } },
+    {
+      $lookup: {
+        from: "user",
+        localField: "createdBy",
+        foreignField: "_id",
+        as: "creator",
+      },
+    },
+    { $unwind: { path: "$creator", preserveNullAndEmptyArrays: true } },
+  ]);
+
+  return serializeArray(
+    meetings.map((m) => ({
+      ...m,
+      creator: m.creator
+        ? { id: m.creator._id.toString(), name: m.creator.name }
+        : null,
+    }))
+  );
+}
+
+export async function getUserMeetingsByDateRange(
+  startDate: string,
+  endDate: string
+) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) throw new Error("Unauthorized");
+
+  await connectDB();
+
+  const meetings = await Meeting.find({
+    participantIds: session.user.id,
+    scheduledAt: { $gte: new Date(startDate), $lte: new Date(endDate) },
+  }).sort({ scheduledAt: 1 });
+
+  return serializeArray(meetings.map((m) => m.toObject()));
+}
+
 export async function getMeetingsCalendar(year: number, month: number) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Unauthorized");

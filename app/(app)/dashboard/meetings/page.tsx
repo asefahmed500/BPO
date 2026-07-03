@@ -1,17 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import MeetingCalendar from "@/components/meeting-calendar";
 import { getMeetings } from "@/lib/actions/meeting-actions";
 
-const statusColors: Record<string, string> = {
-  scheduled: "bg-blue-50 text-blue-700",
-  completed: "bg-green-50 text-green-700",
-  cancelled: "bg-red-50 text-red-700",
-};
+type CalendarView = "month" | "week" | "day";
 
 export default function MeetingsPage() {
   const [meetings, setMeetings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [view, setView] = useState<CalendarView>("month");
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   useEffect(() => {
     getMeetings()
@@ -20,64 +19,33 @@ export default function MeetingsPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const participantResolver = useCallback(() => [], []);
+
+  if (loading) {
+    return (
+      <div>
+        <p className="text-muted text-sm mb-8">View your scheduled meetings</p>
+        <div className="text-center py-12 text-muted text-sm">Loading calendar...</div>
+      </div>
+    );
+  }
+
   return (
     <div>
-      <p className="text-muted text-sm mb-8">View your scheduled meetings</p>
+      <div className="mb-6">
+        <p className="text-muted text-sm">
+          {meetings.length} meeting{meetings.length !== 1 ? "s" : ""} scheduled
+        </p>
+      </div>
 
-      {loading ? (
-        <div className="text-center py-12 text-muted text-sm">Loading...</div>
-      ) : meetings.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-muted text-sm">No meetings scheduled</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {meetings.map((meeting: any) => (
-            <div
-              key={meeting._id}
-              className="bg-white rounded-2xl border border-hairline p-5"
-            >
-              <div className="flex items-start justify-between mb-2">
-                <h3 className="text-sm font-display font-light text-ink">
-                  {meeting.title}
-                </h3>
-                <span
-                  className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${
-                    statusColors[meeting.status] || "bg-gray-50 text-gray-700"
-                  }`}
-                >
-                  {meeting.status}
-                </span>
-              </div>
-              {meeting.agenda && (
-                <p className="text-xs text-muted mb-3">{meeting.agenda}</p>
-              )}
-              <div className="flex items-center gap-4 text-xs text-muted-soft">
-                <span>
-                  {new Date(meeting.scheduledAt).toLocaleDateString("en-US", {
-                    weekday: "short",
-                    month: "short",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
-                <span>{meeting.duration} min</span>
-                {meeting.meetingLink && (
-                  <a
-                    href={meeting.meetingLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-ink underline underline-offset-2"
-                  >
-                    Join
-                  </a>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      <MeetingCalendar
+        meetings={meetings}
+        view={view}
+        onViewChange={setView}
+        currentDate={currentDate}
+        onNavigate={setCurrentDate}
+        participantResolver={participantResolver}
+      />
     </div>
   );
 }
