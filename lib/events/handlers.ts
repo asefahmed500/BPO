@@ -153,6 +153,67 @@ export function initEventHandlers() {
   });
 
   // --- Project events ---
+  eventBus.on("project.submitted", (e) => {
+    logAudit({
+      actorId: e.actorId,
+      action: "project.submitted",
+      resource: "project",
+      resourceId: e.data.projectId,
+      details: e.data,
+    });
+  });
+
+  eventBus.on("project.approved", (e) => {
+    createNotification({
+      userId: e.data.userId,
+      type: "project.approved",
+      title: "Project approved",
+      message: `Your project "${e.data.name}" has been approved.`,
+      link: "/dashboard/projects",
+    });
+    logAudit({
+      actorId: e.actorId,
+      action: "project.approved",
+      resource: "project",
+      resourceId: e.data.projectId,
+      details: e.data,
+    });
+  });
+
+  eventBus.on("project.rejected", (e) => {
+    createNotification({
+      userId: e.data.userId,
+      type: "project.rejected",
+      title: "Project rejected",
+      message: `Your project "${e.data.name}" was rejected. ${e.data.feedback || ""}`.trim(),
+      link: "/dashboard/projects",
+    });
+    logAudit({
+      actorId: e.actorId,
+      action: "project.rejected",
+      resource: "project",
+      resourceId: e.data.projectId,
+      details: e.data,
+    });
+  });
+
+  eventBus.on("project.feedback", (e) => {
+    createNotification({
+      userId: e.data.userId,
+      type: "project.feedback",
+      title: "Project feedback received",
+      message: `Feedback on "${e.data.name}": ${e.data.feedback || "Please review and revise."}`,
+      link: "/dashboard/projects",
+    });
+    logAudit({
+      actorId: e.actorId,
+      action: "project.feedback",
+      resource: "project",
+      resourceId: e.data.projectId,
+      details: e.data,
+    });
+  });
+
   eventBus.on("project.created", (e) => {
     if (e.data.userId) {
       createNotification({

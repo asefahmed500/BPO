@@ -4,7 +4,7 @@ export interface IProject extends Document {
   userId: mongoose.Types.ObjectId;
   name: string;
   description: string;
-  status: "planning" | "active" | "on-hold" | "completed" | "cancelled" | "archived";
+  status: "submitted" | "under-review" | "needs-revision" | "approved" | "active" | "on-hold" | "completed" | "cancelled" | "archived";
   priority: "low" | "medium" | "high" | "urgent";
   category: string;
   color: string;
@@ -19,6 +19,16 @@ export interface IProject extends Document {
   deadline: Date | null;
   budget: number;
   budgetSpent: number;
+  feedback: string;
+  quotedCost: number;
+  quotedCostCurrency: string;
+  comments: {
+    authorId: mongoose.Types.ObjectId;
+    authorName: string;
+    authorRole: string;
+    content: string;
+    createdAt: Date;
+  }[];
   tags: string[];
   teamMemberIds: mongoose.Types.ObjectId[];
   attachments: {
@@ -39,8 +49,8 @@ const ProjectSchema = new Schema<IProject>(
     description: { type: String, default: "" },
     status: {
       type: String,
-      enum: ["planning", "active", "on-hold", "completed", "cancelled", "archived"],
-      default: "active",
+      enum: ["submitted", "under-review", "needs-revision", "approved", "active", "on-hold", "completed", "cancelled", "archived"],
+      default: "submitted",
     },
     priority: {
       type: String,
@@ -62,6 +72,18 @@ const ProjectSchema = new Schema<IProject>(
     deadline: { type: Date, default: null },
     budget: { type: Number, default: 0 },
     budgetSpent: { type: Number, default: 0 },
+    feedback: { type: String, default: "" },
+    quotedCost: { type: Number, default: 0 },
+    quotedCostCurrency: { type: String, default: "USD" },
+    comments: [
+      {
+        authorId: { type: Schema.Types.ObjectId, required: true },
+        authorName: { type: String, required: true },
+        authorRole: { type: String, default: "user" },
+        content: { type: String, required: true },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
     tags: [{ type: String }],
     teamMemberIds: [{ type: Schema.Types.ObjectId }],
     attachments: [
