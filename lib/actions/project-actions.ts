@@ -53,7 +53,9 @@ export async function getProjects() {
   await connectDB();
 
   const filter =
-    session.user.role === "admin" ? {} : { userId: session.user.id };
+    session.user.role === "admin"
+      ? {}
+      : { userId: new mongoose.Types.ObjectId(session.user.id) };
   const projects = await Project.aggregate([
     { $match: filter },
     { $sort: { createdAt: -1 } },
