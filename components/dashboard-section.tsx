@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { animate, useInView } from "motion/react";
+import { EASE_OUT } from "@/lib/motion-presets";
 
 const metrics = [
   { label: "Active Agents", value: "1,247", change: "+12% vs last month" },
@@ -70,24 +72,23 @@ function NavIcon({ name }: { name: string }) {
   }
 }
 
-function CountUp({ end, enabled, suffix = "", duration = 800 }: { end: string; enabled: boolean; suffix?: string; duration?: number }) {
-  const numeric = parseFloat(end.replace(/[,+%]/g, ""));
+function CountUp({ end, enabled, suffix, duration = 1.2 }: { end: string; enabled: boolean; suffix?: string; duration?: number }) {
+  const match = end.match(/^([\d.,]+)/);
+  const numeric = match ? parseFloat(match[1].replace(/[,]/g, "")) : 0;
+  const isDecimal = end.includes(".");
+  const trailing = suffix ?? end.replace(/^[\d.,]+/, "");
   const [count, setCount] = useState(0);
   useEffect(() => {
     if (!enabled) return;
-    let start: number | null = null;
-    let raf: number;
-    const step = (ts: number) => {
-      if (!start) start = ts;
-      const p = Math.min((ts - start) / duration, 1);
-      setCount(numeric * p);
-      if (p < 1) raf = requestAnimationFrame(step);
-    };
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
+    const controls = animate(0, numeric, {
+      duration,
+      ease: EASE_OUT,
+      onUpdate: (v) => setCount(v),
+    });
+    return () => controls.stop();
   }, [enabled, numeric, duration]);
   if (!enabled) return <>{end}</>;
-  return <>{end.includes(".") ? count.toFixed(1) : Math.floor(count).toLocaleString()}{suffix}</>;
+  return <>{isDecimal ? count.toFixed(1) : Math.floor(count).toLocaleString()}{trailing}</>;
 }
 
 const chartPeriods = ["Week", "Month", "Quarter"];
@@ -168,20 +169,10 @@ function Chart({ data, visible }: { data: { day: string; tickets: number }[]; vi
 
 export function DashboardSection() {
   const sectionRef = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
+  const visible = useInView(sectionRef, { once: true, margin: "-100px" });
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [activeNav, setActiveNav] = useState("Overview");
   const [activeSub, setActiveSub] = useState<string | null>(null);
-
-  useEffect(() => {
-    const el = sectionRef.current;
-    if (!el) return;
-    const o = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) { setVisible(true); o.disconnect(); }
-    }, { threshold: 0.1 });
-    o.observe(el);
-    return () => o.disconnect();
-  }, []);
 
   const totalAgents = agentStatus.reduce((s, a) => s + a.count, 0);
 

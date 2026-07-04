@@ -1,60 +1,68 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { motion } from "motion/react";
+import type { ReactNode } from "react";
+import {
+  EASE_OUT,
+  fadeUp,
+  staggerContainer,
+  staggerItem,
+  viewportOnce,
+} from "@/lib/motion-presets";
 
 interface ScrollRevealProps {
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
   delay?: number;
 }
 
 export function ScrollReveal({ children, className = "", delay = 0 }: ScrollRevealProps) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [revealed, setRevealed] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setTimeout(() => setRevealed(true), delay);
-          observer.unobserve(el);
-        }
-      },
-      { threshold: 0.1, rootMargin: "-40px" }
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [delay]);
-
   return (
-    <div ref={ref} className={`animate-reveal ${revealed ? "revealed" : ""} ${className}`}>
+    <motion.div
+      className={className}
+      initial="hidden"
+      whileInView="visible"
+      viewport={viewportOnce}
+      variants={fadeUp}
+      transition={{ delay, duration: 0.6, ease: EASE_OUT }}
+    >
       {children}
-    </div>
+    </motion.div>
   );
 }
 
-export function StaggerGroup({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <div className={className}>{children}</div>;
+export function StaggerGroup({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <motion.div
+      className={className}
+      initial="hidden"
+      whileInView="visible"
+      viewport={viewportOnce}
+      variants={staggerContainer}
+    >
+      {children}
+    </motion.div>
+  );
 }
 
 export function StaggerItem({
   children,
-  index = 0,
-  baseDelay = 0,
   className = "",
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   index?: number;
   baseDelay?: number;
   className?: string;
 }) {
   return (
-    <ScrollReveal delay={baseDelay + index * 40} className={className}>
+    <motion.div className={className} variants={staggerItem}>
       {children}
-    </ScrollReveal>
+    </motion.div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ScrollReveal, StaggerItem } from "@/components/scroll-reveal";
+import { ScrollReveal, StaggerGroup, StaggerItem } from "@/components/scroll-reveal";
 
 const services = [
   {
@@ -90,7 +90,7 @@ export function ServicesSection() {
         </div>
       </ScrollReveal>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
+      <StaggerGroup className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
         {services.map((svc, i) => (
           <StaggerItem key={svc.title} index={i}>
             <div className="group flex flex-col bg-white border border-[#e7e5e4] rounded-2xl p-6 gap-4 transition-all duration-300 ease-out hover:shadow-[0_4px_16px_rgba(0,0,0,0.04)]">
@@ -112,7 +112,7 @@ export function ServicesSection() {
             </div>
           </StaggerItem>
         ))}
-      </div>
+      </StaggerGroup>
     </section>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { ScrollReveal, StaggerItem } from "@/components/scroll-reveal";
+import { ScrollReveal, StaggerGroup, StaggerItem } from "@/components/scroll-reveal";
 
 const reasons = [
   {
@@ -80,7 +80,7 @@ export function WhyNorthbridge() {
         </div>
       </ScrollReveal>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
+      <StaggerGroup className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
         {reasons.map((reason, i) => (
           <StaggerItem key={reason.title} index={i}>
             <div className="group flex items-start bg-white border border-[#e7e5e4] rounded-2xl p-5 gap-4 transition-all duration-300 ease-out hover:shadow-[0_4px_16px_rgba(0,0,0,0.04)]">
@@ -94,7 +94,7 @@ export function WhyNorthbridge() {
             </div>
           </StaggerItem>
         ))}
-      </div>
+      </StaggerGroup>
     </section>
   );
 }

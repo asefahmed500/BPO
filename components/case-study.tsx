@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ScrollReveal, StaggerItem } from "@/components/scroll-reveal";
+import { ScrollReveal, StaggerGroup, StaggerItem } from "@/components/scroll-reveal";
 
 export function CaseStudy() {
   return (
@@ -15,7 +15,7 @@ export function CaseStudy() {
         </div>
       </ScrollReveal>
 
-      <div className="flex flex-col lg:flex-row gap-8 items-center">
+      <StaggerGroup className="flex flex-col lg:flex-row gap-8 items-center">
         <StaggerItem index={0}>
           <div className="w-full lg:w-[540px] h-[340px] rounded-2xl overflow-clip bg-[#f0efed] shrink-0">
             <div
@@ -71,7 +71,7 @@ export function CaseStudy() {
             </Link>
           </div>
         </StaggerItem>
-      </div>
+      </StaggerGroup>
     </section>
   );
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, EB_Garamond } from "next/font/google";
+import { MotionConfig } from "motion/react";
 import "./globals.css";
 import { SiteChrome } from "@/components/site-chrome";
 
@@ -30,7 +31,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${garamond.variable} antialiased`}>
       <body className="min-h-dvh flex flex-col">
-        <SiteChrome>{children}</SiteChrome>
+        <MotionConfig reducedMotion="user">
+          <SiteChrome>{children}</SiteChrome>
+        </MotionConfig>
       </body>
     </html>
   );

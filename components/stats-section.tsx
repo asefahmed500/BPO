@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { animate, motion, useInView } from "motion/react";
+import { EASE_OUT, staggerContainer, staggerItem, viewportOnce } from "@/lib/motion-presets";
 
 const stats = [
   { value: "12,400+", label: "Agents deployed globally" },
@@ -10,90 +12,74 @@ const stats = [
   { value: "99.95%", label: "Infrastructure uptime SLA" },
 ];
 
-function CountUp({
-  end,
-  suffix = "",
-  duration = 1000,
-  enabled,
-}: {
-  end: string;
-  suffix?: string;
-  duration?: number;
-  enabled: boolean;
-}) {
-  const numeric = parseFloat(end.replace(/[,+%]/g, ""));
-  const isDecimal = end.includes(".");
-  const [count, setCount] = useState(0);
+function CountUp({ end, enabled, duration = 1.4 }: { end: string; enabled: boolean; duration?: number }) {
+  const match = end.match(/^([\d.,]+)/);
+  const numeric = match ? parseFloat(match[1].replace(/[,]/g, "")) : 0;
+  const decimals = match && match[1].includes(".") ? match[1].split(".")[1].length : 0;
+  const suffix = end.replace(/^[\d.,]+/, "");
+  const [count, setCount] = useState(enabled ? numeric : 0);
 
   useEffect(() => {
     if (!enabled) return;
-    let startTime: number | null = null;
-    let raf: number;
-
-    function step(ts: number) {
-      if (!startTime) startTime = ts;
-      const elapsed = ts - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      setCount(numeric * progress);
-      if (progress < 1) raf = requestAnimationFrame(step);
-    }
-
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
+    const controls = animate(0, numeric, {
+      duration,
+      ease: EASE_OUT,
+      onUpdate: (v) => setCount(v),
+    });
+    return () => controls.stop();
   }, [enabled, numeric, duration]);
 
-  if (!enabled) return <>{end}</>;
-  return <>{isDecimal ? count.toFixed(2).replace(/\.?0+$/, "") + suffix : Math.floor(count).toLocaleString() + suffix}</>;
+  const formatted =
+    decimals > 0
+      ? count.toFixed(decimals)
+      : Math.floor(count).toLocaleString();
+
+  return <>{enabled ? `${formatted}${suffix}` : end}</>;
 }
 
 export function StatsSection() {
   const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const o = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true);
-          o.disconnect();
-        }
-      },
-      { threshold: 0.2 },
-    );
-    o.observe(el);
-    return () => o.disconnect();
-  }, []);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
 
   return (
-    <section
-      ref={ref}
-      className="flex flex-col bg-[#fafafa] px-5 md:px-20 py-16 md:py-24 gap-10"
-    >
-      <div className="max-w-[620px] flex flex-col gap-3">
+    <section ref={ref} className="flex flex-col bg-[#fafafa] px-5 md:px-20 py-16 md:py-24 gap-10">
+      <motion.div
+        className="max-w-[620px] flex flex-col gap-3"
+        initial={{ opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={viewportOnce}
+        transition={{ duration: 0.6, ease: EASE_OUT }}
+      >
         <span className="text-[#777169] text-[12px] font-semibold tracking-[0.96px] uppercase">By the numbers</span>
         <h2 className="text-[#0c0a09] text-[32px] md:text-[36px] font-light leading-[1.17] tracking-[-0.36px]">
           Scale that speaks for itself
         </h2>
-      </div>
+      </motion.div>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-5">
-        {stats.map((stat, i) => (
-          <div
+      <motion.div
+        className="grid grid-cols-2 md:grid-cols-5 gap-5"
+        initial="hidden"
+        whileInView="visible"
+        viewport={viewportOnce}
+        variants={{ ...staggerContainer, visible: { transition: { staggerChildren: 0.1, delayChildren: 0.05 } } }}
+      >
+        {stats.map((stat) => (
+          <motion.div
             key={stat.label}
-            className={`flex flex-col bg-white border border-[#e7e5e4] rounded-2xl p-5 gap-1.5 transition-all duration-[400ms] ease-out ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
-            style={{ transitionDelay: `${i * 40}ms` }}
+            variants={staggerItem}
+            whileHover={{ y: -4 }}
+            transition={{ duration: 0.2, ease: EASE_OUT }}
+            className="flex flex-col bg-white border border-[#e7e5e4] rounded-2xl p-5 gap-1.5"
           >
             <span className="text-[#0c0a09] text-[28px] md:text-[32px] font-light leading-[1.13] tracking-[-0.32px]">
-              <CountUp end={stat.value} enabled={visible} />
+              <CountUp end={stat.value} enabled={inView} />
             </span>
             <span className="text-[#777169] text-[14px] leading-[1.5]" style={{ letterSpacing: "0.15px" }}>
               {stat.label}
             </span>
-          </div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </section>
   );
 }

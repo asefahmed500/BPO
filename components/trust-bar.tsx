@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { motion } from "motion/react";
+import { EASE_OUT, staggerContainer, staggerItem, viewportOnce } from "@/lib/motion-presets";
 
 const companies = [
   "PalmPay", "Lendable", "Kuda", "Flutterwave", "M-Pesa",
@@ -13,54 +14,47 @@ const certs = [
 ];
 
 export function TrustBar() {
-  const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const o = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true);
-          o.disconnect();
-        }
-      },
-      { threshold: 0.2 },
-    );
-    o.observe(el);
-    return () => o.disconnect();
-  }, []);
-
   return (
-    <section
-      ref={ref}
-      className="flex flex-col bg-[#f5f5f5] px-5 md:px-20 py-16 md:py-20 gap-10"
-    >
-      <div
-        className={`flex flex-col items-center gap-3 text-center transition-all duration-[400ms] ease-out ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+    <section className="flex flex-col bg-[#f5f5f5] px-5 md:px-20 py-16 md:py-20 gap-10">
+      <motion.div
+        className="flex flex-col items-center gap-3 text-center"
+        initial="hidden"
+        whileInView="visible"
+        viewport={viewportOnce}
+        variants={{ ...staggerContainer, visible: { transition: { staggerChildren: 0.06, delayChildren: 0.04 } } }}
       >
-        <span className="text-[#777169] text-[12px] font-semibold tracking-[0.96px] uppercase">Trusted by</span>
+        <motion.span
+          variants={staggerItem}
+          className="text-[#777169] text-[12px] font-semibold tracking-[0.96px] uppercase"
+        >
+          Trusted by
+        </motion.span>
         <div className="grid grid-cols-3 md:flex md:flex-wrap items-center justify-center gap-x-8 gap-y-4">
-          {companies.map((name, i) => (
-            <span
+          {companies.map((name) => (
+            <motion.span
               key={name}
-              className={`text-[#4e4e4e] text-[15px] font-medium leading-[1.4] transition-all duration-[400ms] ease-out ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
-              style={{ transitionDelay: `${i * 40}ms` }}
+              variants={staggerItem}
+              className="text-[#4e4e4e] text-[15px] font-medium leading-[1.4]"
             >
               {name}
-            </span>
+            </motion.span>
           ))}
         </div>
-      </div>
+      </motion.div>
 
-      <div
-        className={`flex flex-wrap items-center justify-center gap-4 transition-all duration-[400ms] ease-out delay-[160ms] ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+      <motion.div
+        className="flex flex-wrap items-center justify-center gap-4"
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={viewportOnce}
+        transition={{ duration: 0.5, ease: EASE_OUT, delay: 0.15 }}
       >
         {certs.map((cert) => (
-          <div
+          <motion.div
             key={cert.label}
-            className="flex items-center bg-white border border-[#e7e5e4] rounded-full px-4 py-2 gap-2.5 transition-all duration-200 hover:shadow-sm"
+            whileHover={{ y: -2 }}
+            transition={{ duration: 0.2, ease: EASE_OUT }}
+            className="flex items-center bg-white border border-[#e7e5e4] rounded-full px-4 py-2 gap-2.5"
           >
             <div className="size-7 flex justify-center items-center bg-[#f0efed] rounded-full">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#292524" strokeWidth="1.5" strokeLinecap="round">
@@ -72,9 +66,9 @@ export function TrustBar() {
               <span className="text-[#0c0a09] text-[14px] font-medium leading-[1.3]">{cert.label}</span>
               <span className="text-[#777169] text-[11px] leading-[1.3]">{cert.caption}</span>
             </div>
-          </div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </section>
   );
 }
