@@ -14,9 +14,11 @@ Next.js 16.2.10 · React 19 · Tailwind v4 · TypeScript 5 · Better Auth · Mon
 |---------|---------|
 | `npm run dev` | Dev server (localhost:3000) |
 | `npm run build` | **Only verification step** — typecheck runs inside `next build` |
-| `npm run lint` | ESLint (next/core-web-vitals + typescript) |
+| `npm run lint` | ESLint (flat config, `eslint-config-next`) |
 
 No test runner. No standalone typecheck script. Always run `npm run build` to verify changes.
+
+**`npm run lint` runs ESLint with no args and has been observed to hang scanning the whole tree in this environment.** If you need a lint signal, scope it to files: `npx eslint path/to/file.tsx`. `next build` is the reliable verification step.
 
 ## Env
 
@@ -113,9 +115,22 @@ Mongoose compiles schemas once at import time. HMR does NOT recompile them. If y
 
 - `@import "tailwindcss"` in `app/globals.css` — no `@tailwind base/components/utilities`
 - Theme defined via `@theme inline` in globals.css — no `tailwind.config`
-- All colors use bracket notation (`bg-[#292524]`) — no named Tailwind colors except `text-white`
+- Prefer the **semantic token utilities** generated from `@theme inline` for consistency: `bg-canvas`, `text-ink`, `text-muted`, `text-body`, `border-hairline`, `border-hairline-soft`, `bg-primary`, `text-on-primary`, `font-display`. Use bracket notation (`bg-[#a7e5d3]`) only for ad-hoc/illustrative colors not in the theme.
 - Heading tags inherit `font-display` + `color: var(--color-ink)` from `@layer base`
-- Cards use plain borders (`border border-hairline`), not `rounded-2xl`
+- Card pattern: `bg-white border border-hairline rounded-2xl p-5` (optionally `hover:shadow-sm`)
+
+## Animation (motion)
+
+- `motion` (the framer-motion successor) is the animation lib. **Import from `motion/react`**, not `framer-motion`.
+- Shared easing + variants live in `lib/motion-presets.ts` (`EASE_OUT`, `fadeUp`, `staggerContainer`, `staggerItem`, `viewportOnce`). Reuse these instead of hand-rolling variants/easing.
+- `ScrollReveal` / `StaggerGroup` / `StaggerItem` in `components/scroll-reveal.tsx` wrap motion `whileInView`. For a staggered grid, the parent must be `StaggerGroup` (a motion component) so variant state propagates to the `StaggerItem` children — a plain `<div>` parent will not animate them.
+- The whole app is wrapped in `<MotionConfig reducedMotion="user">` (`app/layout.tsx`), so OS reduced-motion is honored automatically — don't bypass it with raw CSS keyframe animations that ignore the setting.
+- Count-up numbers use motion's `animate(from, to, { onUpdate })` (see `components/stats-section.tsx`), not a manual `requestAnimationFrame` loop.
+
+## Shared components
+
+- `components/dashboard/widgets.tsx` — dashboard UI kit (`PageHeader`, `MetricCard`, `MetricGrid`, `Panel`, `BarChart`, `ActivityList`, `QuickActionRow`). Reuse for admin/dashboard pages; `BarChart`/`ActivityList` take real data arrays, no fake metrics.
+- Marketing site lives at `app/*.tsx` (uses the reveal kit above); `app/(app)/*` is the authenticated shell (sidebar + topbar).
 
 ## Design tokens
 
